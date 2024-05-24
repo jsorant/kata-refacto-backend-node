@@ -1,19 +1,35 @@
 import {describe, expect, it} from "vitest";
-import {Application} from "../src/Application";
-import {RatesProvider} from "../src/RatesProvider";
-import {InMemoryAccounts} from "../src/InMemoryAccounts";
+import {Application} from "../src/server/Application";
+import {RatesProvider} from "../src/rates/RatesProvider";
+import {InMemoryAccounts} from "../src/persistence/InMemoryAccounts";
 import supertest from "supertest";
 import {mock} from "vitest-mock-extended";
+import {FrankfurterRatesProvider} from "../src/rates/FrankfurterRatesProvider";
+import {MongoDbAccounts} from "../src/persistence/MongoDbAccounts";
+import {CreateAccount} from "../src/domain/CreateAccount";
+import {ComputeBalance} from "../src/domain/ComputeBalance";
+import {MakeDeposit} from "../src/domain/MakeDeposit";
+import {MakeWithdraw} from "../src/domain/MakeWithdraw";
 
 const OWNER = "John Doe";
 const NON_EXISTING_ACCOUNT_ID = "non-existing-id";
 
 //TODO handle account id with wrong format
 
+export function makeApplication(ratesProvider: RatesProvider) {
+    const accounts = new InMemoryAccounts();
+
+    const createAccount = new CreateAccount(accounts);
+    const computeBalance = new ComputeBalance(accounts, ratesProvider);
+    const makeDeposit = new MakeDeposit(accounts);
+    const makeWithdraw = new MakeWithdraw(accounts);
+
+    return new Application(createAccount, computeBalance, makeDeposit, makeWithdraw);
+}
+
 describe("Accounts", () => {
     const ratesProvider = mock<RatesProvider>();
-    const accounts = new InMemoryAccounts();
-    const app = new Application(ratesProvider, accounts);
+    const app = makeApplication(ratesProvider);
     const supertestApp = supertest(app.expressApp);
 
     it('should create a new account', async () => {
@@ -103,6 +119,16 @@ describe("Accounts", () => {
 
         expect(response.status).toEqual(500);
         expect(response.body.error).toEqual(`Account '${NON_EXISTING_ACCOUNT_ID}' not found!`);
+    });
+
+    it('should not withdraw if not enough money available', async () => {
+        const accountId = await createAccount();
+        await makeDeposit(accountId, "1");
+
+        const response = await makeWithdraw(accountId, "5");
+
+        expect(response.status).toEqual(500);
+        expect(response.body.error).toEqual(`Balance cannot become negative!`);
     });
 
     async function createAccount() {

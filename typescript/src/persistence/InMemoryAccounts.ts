@@ -1,4 +1,4 @@
-import {Account, AccountId} from "./Account";
+import {Account, AccountId} from "../domain/Account";
 import {Accounts} from "./Accounts";
 
 export class InMemoryAccounts implements Accounts {

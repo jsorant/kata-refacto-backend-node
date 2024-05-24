@@ -61,47 +61,78 @@ l'application.
 
 </details>
 
-### Etape 3 : Isoler les règles métier
+### Etape 4 : Ajouter des règles métier
 
-Le but de cette étape est d'isoler les règles métier. À la fin de cette étape, il ne doit rester que du code spécifique
-à Express et à l'API REST dans `Application.ts`.
+Le but de cette étape est d'ajouter les règles métier suivantes :
 
-On souhaite par ailleurs mettre en évidence les fonctionnalités de l'application.
+- On ne peut pas retirer d'argent si l'opération rend le solde négatif
+- Un dépôt ou un retrait doit toujours avoir un montant positif ou nul
 
-Objectif :
+On souhaite réaliser cette étape en double loop TDD. Pour cela, on écrit un test de composant qui illustre une nouvelle
+règle. Ce test restera rouge tant que la fonctionnalité ne sera pas implémentée. Puis, on implémente la fonctionnalité
+en TDD via des tests unitaires.
 
-![step3-goal.jpg](assets/step3-goal.jpg)
+![step4-goal.jpg](assets/step4-goal.jpg)
 
 Consignes :
 
-- Utilisez les tests de composant pour sécuriser votre refactoring (`npm run test:component`)
-- Screaming architecture : faites apparaître les fonctionnalités offertes par l'application via les fichiers que vous
-  allez créer :
-    - Isolez la création de compte bancaire dans un ficher `domain/CreateAccount.ts`
-    - Isolez le dépôt d'argent dans un ficher `domain/MakeDeposit.ts`
-    - Isolez le retrait d'argent dans un ficher `domain/MakeWithdraw.ts`
-    - Isolez la consultation du solde (en euros ou en yens) dans un ficher `domain/ComputeBalance.ts`
-- Effectuez au moins une de ces isolations puis allez sur la branche `step-4-start` pour continuer
+- Implémentez la première règle en double loop TDD :
+    - Un test de composant a été ajouté et constitue la première loop, ce test est
+      rouge (`should not withdraw if not enough money available`).
+    - Lancez les tests unitaires via la commande `npm run test:unit`, cette commande lance les tests présents dans le
+      dossier `tests-unit`
+    - Complétez le test écrit dans `tests-unit/Account.spec.ts` de manière à implémenter ce comportement, ce test
+      constitue
+      la seconde loop
+    - Vérifiez que le test de composant est vert
+    - N'oubliez pas de refactorer le code si nécessaire
+- Implémentez la seconde règle en double loop TDD
+- Optionnel : étape bonus - ajouter des tests d'intégration : allez sur la branche `bonus-integration-tests-start`
+- Consultez le bilan du kata en allant sur la branche `end`
 
 <details>
   <summary>Résolution guidée</summary>
 
+Pour résoudre la première fonctionnalité, nous devons calculer le solde dans MakeWithdraw et nous assurer qu'il ne
+devient pas négatif.
+
+Il existe déjà du code responsable de calculer le solde dans `ComputeBalance`. Commençons par factoriser cette
+logique, dans l'idéal dans la classe Account, car c'est elle qui possède les informations nécéssaires à ce calcul.
+
+De même, nous allons déplacer le code responsable de faire un retrait dans la classe Account qui est détentrice des
+transactions.
+
+Nous commençons par une phase de refactoring pour faciliter l'ajout de cette fonctionnalité :
+
 - Lancez les tests de composant `npm run test:component`
-- Isolez le cas d'usage "CreateAccount" :
-    - Isolez le code dédié à lire dans la requête REST les informations nécessaires (déjà fait)
-    - Isolez le code dédié à construire la réponse REST, basé sur le retour du cas d'usage (déjà fait)
-    - Utilisez une extraction de méthode pour isoler le cas d'usage dans une nouvelle méthode de la classe `Application`
-    - Créez une nouvelle classe `domain/CreateAccount.ts`
-    - Ajoutez une méthode `act()` dont le corps est une copie du cas d'usage isolé précédemment
-    - Ce code nécessite une instance de `Accounts` pour fonctionner, créez un constructeur pour injecter cet élément
-    - Injectez une instance de `CreateAccount` dans la classe `Application`
-    - Modifier le code des tests de composant pour réparer la compilation
-    - Branchez l'instance de `CreateAccount` dans la classe `Application`, puis supprimez la méthode obsolète
-    - Réparez les tests e2e
-    - Réparez `Main.ts`
-    - Vérifiez l'ensemble de vos tests `npm run test:all`
-    - Vérifiez que le serveur démarre toujours `npm run dev`
-- Implémentez de la même façon les autres cas d'usage
+- Désactivez le test de la grande boucle qui est en échec
+- Ajoutez une méthode `balance()` dans la classe `Account` et copiez le code responsable de faire ce calcul depuis la
+  classe `ComputeBalance`
+- Modifiez `ComputeBalance` pour utiliser cette nouvelle méthode
+- Ajoutez une méthode `withdraw()` dans la classe `Account` et copiez le code responsable de faire un retrait depuis la
+  classe `MakeWithdraw`
+- Modifiez `MakeWithdraw` pour utiliser cette nouvelle méthode
+- Réactivez le test de la grande boucle qui est en échec
+- Lancez les tests unitaires `npm run test:unit`
+- Complétez le test dans `Account.spec.ts`
+- Ecrivez le code nécessaire pour le faire passer le test unitaire
+- Refactorez le code si nécessaire
+- Lancez à nouveau les tests de composant `npm run test:component` et assurez-vous qu'ils soient vert
+- Refactorez le code si nécessaire
+
+Pour la seconde règle, nous allons utiliser une nouvelle classe `Amount` qui possèdera une vérification dans son
+constructeur.
+
+- Lancez les tests de composant `npm run test:component`
+- Ajoutez un nouveau test qui vérifie qu'on ne peut pas faire un dépôt d'un montant négatif
+- Le test est rouge, il constitue la grande boucle
+- Lancez les tests unitaires `npm run test:unit`
+- Créez un fichier de test `tests-unit/domain/Amount.spec.ts`
+- Ajoutez un test qui s'assure que construire une instance avec 0 lance une erreur
+- Implémentez le code nécessaire à faire passer ce test et refactorez si nécessaire
+- Ajouter un autre test qui s'assure que construire une instance avec -5 lance une erreur
+- Implémentez le code nécessaire à faire passer ce test et refactorez si nécessaire
+- Lancez les tests de composant `npm run test:component`
+- Branchez la classe `Amount` de manière à faire passer le testg
 
 </details>
-

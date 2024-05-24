@@ -1,8 +1,4 @@
-import {Application} from "./Application";
-import {FrankfurterRatesProvider} from "./FrankfurterRatesProvider";
-import {MongoDbAccounts} from "./MongoDbAccounts";
+import {makeApplication} from "./MakeApplication";
 
-const ratesProvider = new FrankfurterRatesProvider();
-const accounts = new MongoDbAccounts();
-const application = new Application(ratesProvider, accounts);
+const application = makeApplication();
 application.start(3000);
