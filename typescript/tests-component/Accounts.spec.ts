@@ -1,24 +1,20 @@
-import {afterEach, describe, expect, it} from "vitest";
+import {describe, expect, it} from "vitest";
 import {Application} from "../src/Application";
+import {RatesProvider} from "../src/RatesProvider";
+import {InMemoryAccounts} from "../src/InMemoryAccounts";
 import supertest from "supertest";
-import {MongoClient} from "mongodb";
+import {mock} from "vitest-mock-extended";
 
 const OWNER = "John Doe";
-const NON_EXISTING_ACCOUNT_ID = "1635fb7d8b1a07dd83cafa31";
-
-const MONGO_URL = 'mongodb://localhost:27017';
-const DATABASE_NAME = 'Banking';
-const ACCOUNTS_COLLECTION = 'accounts';
+const NON_EXISTING_ACCOUNT_ID = "non-existing-id";
 
 //TODO handle account id with wrong format
 
 describe("Accounts", () => {
-    const app = new Application();
+    const ratesProvider = mock<RatesProvider>();
+    const accounts = new InMemoryAccounts();
+    const app = new Application(ratesProvider, accounts);
     const supertestApp = supertest(app.expressApp);
-
-    afterEach(async () => {
-        await cleanDatabase();
-    })
 
     it('should create a new account', async () => {
         const response = await supertestApp
@@ -74,7 +70,8 @@ describe("Accounts", () => {
         expect(response.body.currency).toEqual("EUR");
     });
 
-    it.skip('should get the balance of the account in JPY', async () => {
+    it('should get the balance of the account in JPY', async () => {
+        ratesProvider.getRateFrom.mockResolvedValue(10);
         const accountId = await createAccount();
         await makeDeposit(accountId, "3.50");
         await makeWithdraw(accountId, "1.10");
@@ -83,7 +80,7 @@ describe("Accounts", () => {
 
         expect(response.status).toEqual(200);
         expect(response.body.owner).toEqual(OWNER);
-        expect(response.body.balance).toBeGreaterThan(2.4);
+        expect(response.body.balance).toEqual(24);
         expect(response.body.currency).toEqual("JPY");
     });
 
@@ -145,11 +142,5 @@ describe("Accounts", () => {
             .set("Accept", "application/json")
             .set("Content-Type", "application/json")
             .send({amount});
-    }
-
-    async function cleanDatabase() {
-        const mongoClient = new MongoClient(MONGO_URL);
-        await mongoClient.connect();
-        await mongoClient.db(DATABASE_NAME).collection(ACCOUNTS_COLLECTION).drop();
     }
 })

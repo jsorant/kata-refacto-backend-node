@@ -78,4 +78,17 @@ Mais cela est suffisant pour notre besoin actuel.
 
 ![e2e.jpg](assets/e2e.jpg)
 
+### Composants
+
+Pour tester l'application : `npm run test:component`
+
+Les tests de composants sont des tests pour lesquels l'application est isolée de ses interactions avec ses dépendances
+externes.
+
+Ces tests ne couvrent pas les appels à l'API ni à la base de données.
+Ils sont cependant bien plus rapides à exécuter et donnent un feedback instantané sur une bonne surface de
+l'application.
+
+![component.jpg](assets/component.jpg)
+
 </details>
