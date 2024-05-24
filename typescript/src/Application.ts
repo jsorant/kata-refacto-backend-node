@@ -11,16 +11,6 @@ export class Application {
     constructor() {
         this.expressApp.use(express.json())
 
-        // Get all accounts
-        // For tests/debug
-        this.expressApp.get("/", async (req: Request, res: Response) => {
-            const collection = await this.accountsCollection();
-            const findResult = await collection.find({}).toArray();
-            console.log('Found documents =>', findResult);
-
-            res.send({accounts: findResult});
-        });
-
         // Get an account
         this.expressApp.get("/accounts/:id", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
@@ -49,7 +39,7 @@ export class Application {
                 }
 
                 res.send({
-                    owner: "Jérémy Sorant",
+                    owner: findResult.owner,
                     balance,
                     currency
                 });
