@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
-import {Amount} from "../../src/domain/Amount";
-import {Account} from "../../src/domain/Account";
+import {Amount} from "../../src/banking/domain/entities/Amount";
+import {Account} from "../../src/banking/domain/entities/Account";
 
 describe("Account", () => {
     it('should not withdraw if balance becomes negative', async () => {

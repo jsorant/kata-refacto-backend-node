@@ -1,98 +1,138 @@
-# Reprendre la main sur mon backend Node (Testing & refactoring)
+# Bilan
 
-## Objectif
+## Architecture hexagonale
 
-L'objectif de cet atelier est d'améliorer un backend NodeJS et de manipuler différents types de tests :
+### Présentation
 
-- end-to-end
-- de composants
-- d'intégration
-- unitaires
+L'architecture hexagonale est une architecture proposée par Alistair Cockburn. Nous l'utilisons ici afin de protéger le
+domain, le mettre au centre des préoccupations, et de le découpler de détails d'implémentations liés à la technologie (
+librairies, frameworks, dépendances externes...).
 
-Pour cela, nous serons amené à utiliser les outils Vitest, Supertest et Testcontainers.
+![hexa.jpg](assets/hexa.jpg)
 
-Nous avancerons étape par étape dans l'ajout de ces types de tests.
-Ceci nous permettra de refactorer progressivement la base de code.
+Le domain, qui regroupe l'ensemble des règles métier de l'application, est composé de code uniquement dépendant du
+langage. Dans ce kata, le domain est en JS/TS pur et ne dispose d'aucune dépendances vers des technologies comme
+ExpressJS, Mongo ou un client HTTP.
+Ceci permet de tester facilement les règles métier qui constituent la valeur de notre application.
 
-Nous ajouterons finalement quelques features en double loop TDD.
+Les adapters primaires sont les points d'entrée de l'application.
+Ils pilotent le domain.
+Dans notre cas, il s'agit d'un serveur REST, mais cela pourrait être une IHM, une CLI ou encore une API de librairie.
 
-## Prérequis
+Les adapters secondaires sont des besoins techniques à satisfaire pour que l'application puisse fonctionner.
+Ils sont pilotés par le domain.
+Le domain exprime un besoin via des ports (en vert sur le schéma) qui sont des interfaces, et les adapters sont des
+implémentations de ces ports.
+On utilise ici le principe d'inversion de dépendances de SOLID pour permettre au domain de ne plus être dépendant de la
+technologie.
 
-- Un IDE configuré pour coder en TypeScript
-- Une connexion Internet
-- NodeJS & npm
-- Docker
-- L'image Docker Mongo `mongo:7.0.6`
-    - Vous pouvez la précharger via la commande : `docker image pull mongo:7.0.6`
-- Un client HTTP REST :
-    - VS Code : https://marketplace.visualstudio.com/items?itemName=humao.rest-client
-    - Webstorm : https://www.jetbrains.com/help/webstorm/http-client-in-product-code-editor.html
-    - IDEA : https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html
-- Clonez le repo et installez les dépendances avec la commande `npm install`
+Les adapters primaires et secondaires sont facilement échangeable par d'autres adapters.
+Il est par exemple facile de brancher un autre type de base de données sans risquer de casser une autre zone de
+l'application, et en particulier, le domain.
 
-## Description
+### Architecture émergeante
 
-L'application est un backend NodeJS / Express qui permet de gérer des comptes bancaires.
-Il est possible de créer un compte, d'effectuer des dépots et des retraits d'argent, et de consulter le solde en euros
-et en yens.
+En respectant les principe de responsabilité unique et d'inversion de dépendance de SOLID, ce kata nous amène à faire
+émerger cette architecture.
 
-Pour lancer une base de données Mongo avec Docker :
+En effet, l'isolation des connecteurs vers la base de données et l'API Frankfurter a fait apparaître deux adapters
+secondaires.
 
-```
-mkdir ~/data  
-docker run -d -p 27017:27017 -v ~/data:/data/db mongo:7.0.6
-```
+La volonté d'isoler le code relatif à REST a fait apparaître l'adapter primaire.
 
-Il est aussi nécessaire d'être connecté à Internet car l'application dépend de l'API tierce Frankfurter.
+Il ne restait alors qu'à créer la bonne arborescence de dossiers pour faire apparaître les trois couches de l'
+architecture hexagonale, en prenant soin de bien placer les ports dans le domain.
 
-## Tests
+## Types de tests automatisés
 
-<details>
-  <summary>Les types de test disponibles</summary>
+### Tests end-to-end (e2e)
 
-### Manuels
+Les tests end-to-end sont des tests pour lesquels on souhaite tester en étant au plus proche de la réalité.
+On est notamment connecté aux dépendances externes.
 
-Pour tester manuellement l'application :
+Ces tests sont lents, coûteux et fragiles, mais ils permettent de valider des cas d'usage
+de bout en bout. De ce fait, on évite d'en écrire beaucoup et on se limite aux cas critiques.
 
-- Démarrez la base de données
-- Lancez le serveur en local `npm run dev`
-- Utilisez le fichier `Request.http` et le plugin HTTP Client pour effectuer des requêtes
+Dans notre cas, nous n'avons pas réellement de tests e2e dans le sens où l'application n'est ni buildée, ni lancée.
+Par ailleurs, l'utilisation de Supertest ne constitue pas un vrai client HTTP qui effectue des vraies requêtes.
 
-![manual-tests.jpg](assets/manual-tests.jpg)
+Pour effectuer des tests e2e plus corrects, on pourrait builder l'application dans une image Docker et utiliser
+TestContainers pour démarrer à la fois l'application et la base de données, puis émettre des appels HTTPS depuis notre
+tests runner via un client HTTP comme Axios ou node-fetch:
 
-### End-to-end (e2e)
+![e2e-containers.jpg](assets/e2e-containers.jpg)
 
-Pour tester l'application :
+Les tests e2e interagissent avec l'application via ses adapters primaires et l'application est reliée à ses dépendances
+externes via ses adapters secondaires.
 
-- Démarrez la base de données
-- Lancez les test `npm run test:e2e`
+![e2e-hexa.jpg](assets/e2e-hexa.jpg)
 
-Les tests end-to-end sont des tests pour lesquels l'application est connectée à ses dépendances externes. Ils sont
-lents, coûteux et fragiles à cause de ces dépendances, mais ils permettent de valider des cas d'usage complets. De ce
-fait, on évite d'en écrire beaucoup et on souhaite se limiter aux cas critiques.
-
-Dans notre cas, ce ne sont pas réellement des tests e2e dans le sens ou l'application ne tourne pas, et on n'utilise pas
-de client HTTP pour effectuer les requêtes. Les tests devraient par ailleurs se charger de démarrer et d'arrêter la base
-de données.
-Mais cela est suffisant pour notre besoin actuel.
-
-![e2e.jpg](assets/e2e.jpg)
-
-### Composants
-
-Pour tester l'application : `npm run test:component`
+### Tests de composants
 
 Les tests de composants sont des tests pour lesquels l'application est isolée de ses interactions avec ses dépendances
 externes.
 
-Ces tests ne couvrent pas les appels à l'API ni à la base de données.
+Ces tests ne couvrent pas les appels aux services externes ni à la base de données.
 Ils sont cependant bien plus rapides à exécuter et donnent un feedback instantané sur une bonne surface de
 l'application.
 
-![component.jpg](assets/component.jpg)
+Pour ce type de tests, on utilise des doublures de tests à la place des adapters secondaires.
 
-### Unitaires
+On peut manipuler l'application en se branchant aux adapters primaires ou directement au domain si on souhaite encore
+alléger ces tests (dans ce cas, utiliser d'autres types de tests pour couvrir le code des adapters primaires).
 
-Pour tester : `npm run test:unit`
+![component-hexa.jpg](assets/component-hexa.jpg)
 
-</details>
+### Tests d'intégration
+
+Les tests d'intégration sont des tests destinés à vérifier notre utilisation d'outils, libs et services externes dont
+dépend notre application.
+
+Ces tests peuvent être lourds et/ou coûteux, c'est pourquoi on souhaite limiter le périmètre des éléments testés au
+maximum. On s'assure que ces éléments respectent bien le principe de responsabilité unique (ex : un connecteur vers une
+base de données ne doit pas contenir de logique métier).
+
+Ces tests valident le comportement des adapters secondaires.
+
+Ils peuvent aussi permettre de valider les adapter primaires en utilisant des doublures de tests à la place du domain.
+
+![integration.jpg](assets/integration.jpg)
+
+### Tests unitaires
+
+Les tests unitaires sont des tests destinés à couvrir des unités fonctionnelles sans dépendances lourdes.
+
+Ils sont très rapides à exécuter et donnent un feedback immédiat.
+
+Ces tests valident le comportement du domain et la logique d'adaptation présente dans les adapters primaires et
+secondaires.
+
+Attention toutefois, ces tests sont très liés à la manière dont vous avez choisi d'implémenter votre solution. Ils
+peuvent donc limiter vos capacités de refactoring sans avoir à adapter des tests existants.
+
+![unit.jpg](assets/unit.jpg)
+
+## Concepts abordés
+
+- Tests runner : Vitest, mode UI, code coverage, watcher mode
+- Supertest : un outil pratique pour tester facilement un backend Express
+- TestContainers : un outil pratique pour manipuler des conteneurs et faciliter l'écriture de tests e2e et d'intégration
+- Doublures de test :
+    - Stub : bouchon qui remplace un élément, on peut définir les valeurs que le bouchon doit retourner
+    - Fake : implémentation alternative plus simple d'un élément existant pour alléger un test
+- Injection de dépendance : permet de tester plus facilement en permettant de remplacer une dépendance par une autre
+- SRP (SOLID) : principe qui fait émerger l'architecture naturellement et qui simplifie le code
+- DIP (SOLID) : principe qui permet d'inverser la dépendance entre domain et adapters secondaires, et d'isoler le domain
+- Screaming architecture : faire apparaitre le domaine métier et les fonctionnalités via le naming
+- Double loop TDD : Utiliser deux boucles de tests pour développer une fonctionnalité
+
+## Ouvertures
+
+- Stratégies de tests : pyramid, diamond, honeycomb, trophy...
+- Mieux gérer les dates et le générateur de UUID
+- Primitive obsession
+- Immutable
+- DDD tactique : Aggregate / Entity / Value Object
+- CQRS
+- Event sourcing
+- ...
