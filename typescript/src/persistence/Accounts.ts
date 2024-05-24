@@ -1,4 +1,4 @@
-import {Account, AccountId} from "./Account";
+import {Account, AccountId} from "../domain/Account";
 
 export interface Accounts {
     save(account: Account): Promise<void>;

@@ -1,6 +1,6 @@
 import {Accounts} from "./Accounts";
 import {MongoClient, ObjectId} from "mongodb";
-import {Account, AccountId} from "./Account";
+import {Account, AccountId} from "../domain/Account";
 
 const MONGO_URL = 'mongodb://localhost:27017';
 const DATABASE_NAME = 'Banking';
@@ -20,11 +20,7 @@ export class MongoDbAccounts implements Accounts {
 
         if (findResult === null) return undefined;
 
-        return {
-            id: findResult.id,
-            owner: findResult.owner,
-            transactions: findResult.transactions
-        }
+        return new Account(findResult.id, findResult.owner, findResult.transactions);
     }
 
     async updateTransactionsOf(id: AccountId, newTransactions: any[]): Promise<void> {

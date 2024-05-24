@@ -1,12 +1,10 @@
 import {afterEach, describe, expect, it} from "vitest";
-import {Application} from "../src/Application";
 import {MongoClient} from "mongodb";
-import {FrankfurterRatesProvider} from "../src/FrankfurterRatesProvider";
-import {MongoDbAccounts} from "../src/MongoDbAccounts";
 import supertest from "supertest";
+import {makeApplication} from "../src/MakeApplication";
 
 const OWNER = "John Doe";
-const NON_EXISTING_ACCOUNT_ID = "non-existing-id";
+const NON_EXISTING_ACCOUNT_ID = "1635fb7d8b1a07dd83cafa31";
 
 const MONGO_URL = 'mongodb://localhost:27017';
 const DATABASE_NAME = 'Banking';
@@ -15,9 +13,7 @@ const ACCOUNTS_COLLECTION = 'accounts';
 //TODO handle account id with wrong format
 
 describe("Accounts", () => {
-    const ratesProvider = new FrankfurterRatesProvider();
-    const accounts = new MongoDbAccounts();
-    const app = new Application(ratesProvider, accounts);
+    const app = makeApplication();
     const supertestApp = supertest(app.expressApp);
 
     afterEach(async () => {
