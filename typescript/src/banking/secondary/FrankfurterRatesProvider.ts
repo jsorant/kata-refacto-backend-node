@@ -1,4 +1,4 @@
-import {RatesProvider} from "./RatesProvider";
+import {RatesProvider} from "../domain/ports/RatesProvider";
 
 export class FrankfurterRatesProvider implements RatesProvider {
     async getRateFrom(fromCurrency: string, toCurrency: string) {

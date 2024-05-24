@@ -1,45 +1,45 @@
-import {Accounts} from "../persistence/Accounts";
-import {RatesProvider} from "../rates/RatesProvider";
+import {AccountsRepository} from "../ports/AccountsRepository";
+import {RatesProvider} from "../ports/RatesProvider";
+
+export enum Currency {
+    EUR,
+    JPY
+}
 
 export interface AccountBalance {
     owner: string;
     balance: number;
-    currency: string;
+    currency: Currency;
 }
 
 export class ComputeBalance {
-    private readonly accounts: Accounts;
+    private readonly accounts: AccountsRepository;
     private readonly ratesProvider: RatesProvider;
 
-    constructor(accounts: Accounts, ratesProvider: RatesProvider) {
+    constructor(accounts: AccountsRepository, ratesProvider: RatesProvider) {
         this.accounts = accounts;
         this.ratesProvider = ratesProvider;
     }
 
-    async act(id: string, targetCurrency: string): Promise<AccountBalance> {
+    async act(id: string, targetCurrency: Currency): Promise<AccountBalance> {
         const account = await this.accounts.getById(id);
 
         if (account === undefined) {
             throw new Error(`Account '${id}' not found!`);
         }
 
-        let balance = account.transactions.reduce((acc: number, val: any) => {
-            if (val.type === "deposit") return acc + val.amount.value;
-            return acc - val.amount.value;
-        }, 0);
-        let currency = "EUR";
+        let balance = account.balance();
 
         // Get JPY account value
-        if (targetCurrency === "JPY") {
+        if (targetCurrency === Currency.JPY) {
             const rate = await this.ratesProvider.getRateFrom("EUR", "JPY");
             balance = balance * rate;
-            currency = "JPY"
         }
 
         return {
             owner: account.owner,
             balance,
-            currency
+            currency: targetCurrency
         };
     }
 }

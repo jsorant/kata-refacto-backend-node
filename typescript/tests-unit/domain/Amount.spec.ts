@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {Amount} from "../../src/domain/Amount";
+import {Amount} from "../../src/banking/domain/model/Amount";
 
 describe("Amount", () => {
     it('should create an amount', async () => {

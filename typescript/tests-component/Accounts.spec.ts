@@ -1,20 +1,17 @@
 import {describe, expect, it} from "vitest";
-import {Application} from "../src/server/Application";
-import {RatesProvider} from "../src/rates/RatesProvider";
-import {InMemoryAccounts} from "../src/persistence/InMemoryAccounts";
 import supertest from "supertest";
 import {mock} from "vitest-mock-extended";
-import {FrankfurterRatesProvider} from "../src/rates/FrankfurterRatesProvider";
-import {MongoDbAccounts} from "../src/persistence/MongoDbAccounts";
-import {CreateAccount} from "../src/domain/CreateAccount";
-import {ComputeBalance} from "../src/domain/ComputeBalance";
-import {MakeDeposit} from "../src/domain/MakeDeposit";
-import {MakeWithdraw} from "../src/domain/MakeWithdraw";
+import {Application} from "../src/banking/primary/Application";
+import {MakeWithdraw} from "../src/banking/domain/features/MakeWithdraw";
+import {MakeDeposit} from "../src/banking/domain/features/MakeDeposit";
+import {ComputeBalance} from "../src/banking/domain/features/ComputeBalance";
+import {CreateAccount} from "../src/banking/domain/features/CreateAccount";
+import {InMemoryAccounts} from "../src/banking/secondary/InMemoryAccounts";
+import {RatesProvider} from "../src/banking/domain/ports/RatesProvider";
+
 
 const OWNER = "John Doe";
 const NON_EXISTING_ACCOUNT_ID = "non-existing-id";
-
-//TODO handle account id with wrong format
 
 export function makeApplication(ratesProvider: RatesProvider) {
     const accounts = new InMemoryAccounts();

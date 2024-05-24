@@ -1,11 +1,11 @@
-import {Accounts} from "../persistence/Accounts";
-import {Account} from "./Account";
+import {AccountsRepository} from "../ports/AccountsRepository";
+import {Account} from "../model/Account";
 import {randomUUID} from "node:crypto";
 
 export class CreateAccount {
-    private readonly accounts: Accounts;
+    private readonly accounts: AccountsRepository;
 
-    constructor(accounts: Accounts) {
+    constructor(accounts: AccountsRepository) {
         this.accounts = accounts;
     }
 

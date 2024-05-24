@@ -1,10 +1,10 @@
 import express, {Express, NextFunction, Request, Response} from "express";
-import {AccountId} from "../domain/Account";
-import {ComputeBalance} from "../domain/ComputeBalance";
-import {CreateAccount} from "../domain/CreateAccount";
-import {MakeDeposit} from "../domain/MakeDeposit";
-import {MakeWithdraw} from "../domain/MakeWithdraw";
-import {Amount} from "../domain/Amount";
+import {CreateAccount} from "../domain/features/CreateAccount";
+import {ComputeBalance, Currency} from "../domain/features/ComputeBalance";
+import {MakeDeposit} from "../domain/features/MakeDeposit";
+import {MakeWithdraw} from "../domain/features/MakeWithdraw";
+import {AccountId} from "../domain/model/Account";
+import {Amount} from "../domain/model/Amount";
 
 export class Application {
     public expressApp: Express = express();
@@ -24,7 +24,7 @@ export class Application {
 
         this.expressApp.get("/accounts/:id", async (req: Request, res: Response, next: NextFunction) => {
             const id: AccountId = req.params.id;
-            const currency: string = req.query.currency === "JPY" ? "JPY" : "EUR";
+            const currency: Currency = req.query.currency === "JPY" ? Currency.JPY : Currency.EUR;
 
             try {
                 const accountBalance = await this.computeBalance.act(id, currency);
@@ -32,7 +32,7 @@ export class Application {
                 res.send({
                     owner: accountBalance.owner,
                     balance: accountBalance.balance,
-                    currency: accountBalance.currency
+                    currency: accountBalance.currency === Currency.JPY ? "JPY" : "EUR"
                 });
             } catch (e) {
                 next(e);

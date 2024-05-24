@@ -1,11 +1,11 @@
-import {Accounts} from "../persistence/Accounts";
-import {AccountId} from "./Account";
-import {Amount} from "./Amount";
+import {AccountsRepository} from "../ports/AccountsRepository";
+import {AccountId} from "../model/Account";
+import {Amount} from "../model/Amount";
 
 export class MakeWithdraw {
-    private readonly accounts: Accounts;
+    private readonly accounts: AccountsRepository;
 
-    constructor(accounts: Accounts) {
+    constructor(accounts: AccountsRepository) {
         this.accounts = accounts;
     }
 
@@ -18,6 +18,6 @@ export class MakeWithdraw {
 
         account.addWithdraw(amount);
 
-        await this.accounts.updateTransactionsOf(accountId, account.transactions);
+        await this.accounts.updateTransactionsOf(account);
     }
 }
