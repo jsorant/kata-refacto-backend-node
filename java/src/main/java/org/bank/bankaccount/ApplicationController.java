@@ -72,7 +72,7 @@ public class ApplicationController {
                 currency = "JPY";
             }
 
-            return "{\"owner\": \"Jérémy Sorant\", \"balance\": " + balance + ", \"currency\": \"" + currency + "\"}";
+            return "{\"owner\": \"" + findResult.get("owner") + "\", \"balance\": " + balance + ", \"currency\": \"" + currency + "\"}";
         }
     }
 

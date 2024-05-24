@@ -17,7 +17,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ApplicationControllerTests {
+class ApplicationControllerE2ETests {
     private static final String OWNER = "Anthony Rey";
     private static final String NON_EXISTING_ACCOUNT_ID = "1635fb7d8b1a07dd83cafa31";
 

@@ -4,7 +4,7 @@
 ### List accounts
 
 GET {{api}}/
-Accept: application/json
+Content-Type: application/json
 
 ### Create a new account
 
