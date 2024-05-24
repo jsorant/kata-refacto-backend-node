@@ -91,4 +91,8 @@ l'application.
 
 ![component.jpg](assets/component.jpg)
 
+### Unitaires
+
+Pour tester : `npm run test:unit`
+
 </details>

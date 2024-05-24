@@ -1,4 +1,4 @@
-import {Account, AccountId} from "../domain/Account";
+import {Account, AccountId, Transaction} from "../domain/Account";
 import {Accounts} from "./Accounts";
 
 export class InMemoryAccounts implements Accounts {
@@ -12,7 +12,7 @@ export class InMemoryAccounts implements Accounts {
         return this.accounts.get(id);
     }
 
-    async updateTransactionsOf(id: AccountId, newTransactions: any[]): Promise<void> {
+    async updateTransactionsOf(id: AccountId, newTransactions: Transaction[]): Promise<void> {
         const account = this.accounts.get(id);
         if (account) {
             this.accounts.set(account.id, new Account(

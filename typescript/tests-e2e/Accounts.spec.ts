@@ -10,11 +10,13 @@ const MONGO_URL = 'mongodb://localhost:27017';
 const DATABASE_NAME = 'Banking';
 const ACCOUNTS_COLLECTION = 'accounts';
 
-//TODO handle account id with wrong format
-
 describe("Accounts", () => {
     const app = makeApplication();
     const supertestApp = supertest(app.expressApp);
+
+    afterEach(async () => {
+        await cleanDatabase();
+    })
 
     afterEach(async () => {
         await cleanDatabase();
