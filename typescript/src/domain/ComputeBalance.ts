@@ -24,8 +24,8 @@ export class ComputeBalance {
         }
 
         let balance = account.transactions.reduce((acc: number, val: any) => {
-            if (val.type === "deposit") return acc + val.amount;
-            if (val.type === "withdraw") return acc - val.amount;
+            if (val.type === "deposit") return acc + val.amount.value;
+            return acc - val.amount.value;
         }, 0);
         let currency = "EUR";
 

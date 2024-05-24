@@ -1,5 +1,6 @@
 import {Accounts} from "../persistence/Accounts";
 import {AccountId} from "./Account";
+import {Amount} from "./Amount";
 
 export class MakeDeposit {
     private readonly accounts: Accounts;
@@ -8,20 +9,15 @@ export class MakeDeposit {
         this.accounts = accounts;
     }
 
-    async act(accountId: AccountId, amount: number): Promise<void> {
+    async act(accountId: AccountId, amount: Amount): Promise<void> {
         const account = await this.accounts.getById(accountId);
 
         if (account === undefined) {
             throw new Error(`Account '${accountId}' not found!`);
         }
 
-        //TODO amount must be > 0
-        const newTransactions = [...account.transactions, {
-            date: Date.now(),
-            type: "deposit",
-            amount: amount
-        }];
+        account.addDeposit(amount);
 
-        await this.accounts.updateTransactionsOf(accountId, newTransactions);
+        await this.accounts.updateTransactionsOf(accountId, account.transactions);
     }
 }

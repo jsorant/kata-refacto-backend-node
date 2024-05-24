@@ -4,6 +4,7 @@ import {ComputeBalance} from "../domain/ComputeBalance";
 import {CreateAccount} from "../domain/CreateAccount";
 import {MakeDeposit} from "../domain/MakeDeposit";
 import {MakeWithdraw} from "../domain/MakeWithdraw";
+import {Amount} from "../domain/Amount";
 
 export class Application {
     public expressApp: Express = express();
@@ -54,7 +55,7 @@ export class Application {
             const amount: number = parseFloat(req.body.amount);
 
             try {
-                await this.makeDeposit.act(id, amount);
+                await this.makeDeposit.act(id, new Amount(amount));
 
                 res.json({
                     message: `Account ${id} updated.`
@@ -69,7 +70,7 @@ export class Application {
             const amount: number = parseFloat(req.body.amount);
 
             try {
-                await this.makeWithdraw.act(id, amount);
+                await this.makeWithdraw.act(id, new Amount(amount));
 
                 res.json({
                     message: `Account ${id} updated.`

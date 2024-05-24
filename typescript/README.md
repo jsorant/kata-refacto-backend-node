@@ -59,80 +59,20 @@ l'application.
 
 ![component.jpg](assets/component.jpg)
 
+### Unitaires
+
+Pour tester : `npm run test:unit`
+
 </details>
 
-### Etape 4 : Ajouter des règles métier
+### Etape bonus : Ajouter des tests d'intégration
 
-Le but de cette étape est d'ajouter les règles métier suivantes :
-
-- On ne peut pas retirer d'argent si l'opération rend le solde négatif
-- Un dépôt ou un retrait doit toujours avoir un montant positif ou nul
-
-On souhaite réaliser cette étape en double loop TDD. Pour cela, on écrit un test de composant qui illustre une nouvelle
-règle. Ce test restera rouge tant que la fonctionnalité ne sera pas implémentée. Puis, on implémente la fonctionnalité
-en TDD via des tests unitaires.
-
-![step4-goal.jpg](assets/step4-goal.jpg)
+On veut créer des tests pour valider le comportement du code lié à la base de données et à l'API Frankfurter.
 
 Consignes :
 
-- Implémentez la première règle en double loop TDD :
-    - Un test de composant a été ajouté et constitue la première loop, ce test est
-      rouge (`should not withdraw if not enough money available`).
-    - Lancez les tests unitaires via la commande `npm run test:unit`, cette commande lance les tests présents dans le
-      dossier `tests-unit`
-    - Complétez le test écrit dans `tests-unit/Account.spec.ts` de manière à implémenter ce comportement, ce test
-      constitue
-      la seconde loop
-    - Vérifiez que le test de composant est vert
-    - N'oubliez pas de refactorer le code si nécessaire
-- Implémentez la seconde règle en double loop TDD
-- Optionnel : étape bonus - ajouter des tests d'intégration : allez sur la branche `bonus-integration-tests-start`
+- Utilisez TestContainers pour gérer une base de données par le code de tests
+- Créez un dossier `tests-integration` pour lancer ces tests indépendamment des autres avec la
+  commande `npm run test:integration`
+- Attention à ne pas lancer les tests liés à l'API Frankfurter trop souvent !
 - Consultez le bilan du kata en allant sur la branche `end`
-
-<details>
-  <summary>Résolution guidée</summary>
-
-Pour résoudre la première fonctionnalité, nous devons calculer le solde dans MakeWithdraw et nous assurer qu'il ne
-devient pas négatif.
-
-Il existe déjà du code responsable de calculer le solde dans `ComputeBalance`. Commençons par factoriser cette
-logique, dans l'idéal dans la classe Account, car c'est elle qui possède les informations nécéssaires à ce calcul.
-
-De même, nous allons déplacer le code responsable de faire un retrait dans la classe Account qui est détentrice des
-transactions.
-
-Nous commençons par une phase de refactoring pour faciliter l'ajout de cette fonctionnalité :
-
-- Lancez les tests de composant `npm run test:component`
-- Désactivez le test de la grande boucle qui est en échec
-- Ajoutez une méthode `balance()` dans la classe `Account` et copiez le code responsable de faire ce calcul depuis la
-  classe `ComputeBalance`
-- Modifiez `ComputeBalance` pour utiliser cette nouvelle méthode
-- Ajoutez une méthode `withdraw()` dans la classe `Account` et copiez le code responsable de faire un retrait depuis la
-  classe `MakeWithdraw`
-- Modifiez `MakeWithdraw` pour utiliser cette nouvelle méthode
-- Réactivez le test de la grande boucle qui est en échec
-- Lancez les tests unitaires `npm run test:unit`
-- Complétez le test dans `Account.spec.ts`
-- Ecrivez le code nécessaire pour le faire passer le test unitaire
-- Refactorez le code si nécessaire
-- Lancez à nouveau les tests de composant `npm run test:component` et assurez-vous qu'ils soient vert
-- Refactorez le code si nécessaire
-
-Pour la seconde règle, nous allons utiliser une nouvelle classe `Amount` qui possèdera une vérification dans son
-constructeur.
-
-- Lancez les tests de composant `npm run test:component`
-- Ajoutez un nouveau test qui vérifie qu'on ne peut pas faire un dépôt d'un montant négatif
-- Le test est rouge, il constitue la grande boucle
-- Lancez les tests unitaires `npm run test:unit`
-- Créez un fichier de test `tests-unit/domain/Amount.spec.ts`
-- Ajoutez un test qui s'assure que construire une instance avec 0 lance une erreur
-- Implémentez le code nécessaire à faire passer ce test et refactorez si nécessaire
-- Ajouter un autre test qui s'assure que construire une instance avec -5 lance une erreur
-- Implémentez le code nécessaire à faire passer ce test et refactorez si nécessaire
-- Lancez les tests de composant `npm run test:component`
-- Branchez la classe `Amount` de manière à faire passer le testg
-
-</details>
