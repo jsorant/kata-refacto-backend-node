@@ -1,5 +1,5 @@
 @api = http://localhost:3000
-@accountId = 6645b7dba0039dc3ba28543f
+@accountId = 6669baafc392342a8902f974
 
 ### List accounts
 
@@ -24,13 +24,9 @@ Content-Type: application/json
 
 ### Get an account's balance in JPY currency
 
-GET {{api}}/accounts/{{accountId}}
+GET {{api}}/accounts/{{accountId}}?currency=JPY
 Accept: application/json
 Content-Type: application/json
-
-{
-  "currency": "JPY"
-}
 
 ### Deposit money into an account
 

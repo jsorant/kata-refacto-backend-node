@@ -1,5 +1,17 @@
 # Reprendre la main sur mon backend Node (Testing & refactoring)
 
+## Résolution guidée
+
+Cette page détaille les consignes pour faire le kata de manière accompagnée. Il sera alors découpé en plusieurs étapes.
+
+Pour une résolution libre, allez sur [cette page](all_steps.md).
+
+## Slides
+
+Ce kata a été proposé en atelier à [Tech N Wine](https://technwine.fr/) 2024.
+
+[Les slides sont disponibles ici.](assets/slides_fr.pdf)
+
 ## Objectif
 
 L'objectif de cet atelier est d'améliorer un backend NodeJS et de manipuler différents types de tests :
@@ -48,9 +60,13 @@ Il est aussi nécessaire d'être connecté à Internet car l'application dépend
 
 ## Tests
 
-### Manuels
+Pour le moment, l'application est testée manuellement uniquement.
 
-Pour le moment, l'application est testée manuellement via le fichier `Requests.http` qui détaille les appels possibles.
+Pour tester :
+
+- Démarrez la base de données
+- Lancez le serveur en local `npm run dev`
+- Utilisez le fichier `Request.http` et le plugin HTTP Client pour effectuer des requêtes
 
 ![manual-tests.jpg](assets/manual-tests.jpg)
 
@@ -66,10 +82,9 @@ appels aux routes, sans démarrer l'application.
 
 Voici les consignes :
 
-- On utilise une vraie base de données qui tourne dans un conteneur Docker lancé manuellement avant les tests (voir le
-  paragraphe "Description")
-- L'application émet des appels vers Frankfurter pour récupérer les taux de conversion. De ce fait, ne lancez pas trop
-  souvent les tests qui utilisent cette API (utiliser `it.skip` pour désactiver un test)
+- Démarrez une instance de Mongo dans un conteneur Docker
+- Ne lancez pas trop souvent les tests qui utilisent l'API Frankfurter (utilisez `it.skip` pour désactiver
+  un test)
 - `Application.ts` n'est pas encore couvert par des tests, ne modifiez son code que si cela est vraiment nécessaire
 - Les tests sont à rédiger dans le fichier `tests-e2e/Accounts.spec.ts`
 - Travaillez avec un feedback continu sur les tests e2e via la commande `npm run test:e2e`
@@ -79,7 +94,7 @@ Voici les consignes :
 - Une fois ces étapes réalisées, ajoutez des tests pour atteindre une couverture maximale ou passez à l'étape suivante
   en allant sur la branche `step-2-start`
 
-Tips :
+Notes :
 
 - Ne cherchez pas à tester la méthode `start()` de la classe `Application`
 - Utilisez le mode UI de Vitest pour vérifier la couverture de code avec plus de confort
