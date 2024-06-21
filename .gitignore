@@ -1,5 +1,2 @@
-node_modules/
-dist/
-.nyc_output
-coverage/
-.idea/
+.idea
+coverage
