@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClient;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -21,9 +22,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 public class ApplicationController {
 
+    private final RatesProvider ratesProvider;
     private final MongoTemplate mongoTemplate;
 
-    public ApplicationController(MongoTemplate mongoTemplate) {
+    public ApplicationController(RatesProvider ratesProvider, MongoTemplate mongoTemplate) {
+        this.ratesProvider = ratesProvider;
         this.mongoTemplate = mongoTemplate;
     }
 
@@ -52,13 +55,22 @@ public class ApplicationController {
         if (json == null) {
             throw new RuntimeException("Account '" + id+ "' not found!");
         } else {
-            var list = findResult.getList("transactions", Document.class);
-            var balance = list.stream().reduce(0.0, (acc, val) -> {
-                if (val.get("type").equals("deposit")){
-                    return acc + val.getDouble("amount");
+            var transactions = findResult.getList("transactions", Document.class).stream().map(val -> {
+                var date = new Date(Long.parseLong(val.getString("date")));
+                var type = val.getString("type");
+                var amount = val.getDouble("amount");
+                return new Transaction(date, type, amount);
+            }).collect(Collectors.toList());
+            Account account = new Account(transactions, findResult.getString("owner"));
+
+
+            //var list = findResult.getList("transactions", Document.class);
+            var balance = account.transations().stream().reduce(0.0, (acc, val) -> {
+                if (val.type().equals("deposit")){
+                    return acc + val.amount();
                 }
-                if(val.get("type").equals("withdraw")) {
-                    return acc - val.getDouble("amount");
+                if(val.type().equals("withdraw")) {
+                    return acc - val.amount();
                 }
                 return 0.0;
             }, (left, _unused) -> left);
@@ -66,13 +78,12 @@ public class ApplicationController {
 
             // Get JPY account value
             if (requestCurrency != null && requestCurrency.equals("JPY")) {
-                var host = "api.frankfurter.app";
-                var data = RestClient.builder().baseUrl("https://" + host).build().get().uri("/latest?amount=1&from=EUR&to=JPY").retrieve().body(FrankFurterJson.class);
-                balance = balance * data.rates().get("JPY");
                 currency = "JPY";
+                Double rate = ratesProvider.get("EUR", currency);
+                balance = balance * rate;
             }
 
-            return "{\"owner\": \"" + findResult.get("owner") + "\", \"balance\": " + balance + ", \"currency\": \"" + currency + "\"}";
+            return "{\"owner\": \"" + account.owner() + "\", \"balance\": " + balance + ", \"currency\": \"" + currency + "\"}";
         }
     }
 

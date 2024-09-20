@@ -1,29 +1,31 @@
 import express, {Express, NextFunction, Request, Response} from "express";
-import {MongoClient, ObjectId} from "mongodb";
-
-const MONGO_URL = 'mongodb://localhost:27017';
-const DATABASE_NAME = 'Banking';
+import {RatesProvider} from "./RatesProvider";
+import {Accounts} from "./Accounts";
+import {Account} from "./Account";
+import {randomUUID} from "node:crypto";
 
 export class Application {
     public expressApp: Express = express();
-    private mongoClient = new MongoClient(MONGO_URL);
 
-    constructor() {
+    private ratesProvider;
+    private accounts;
+
+    constructor(ratesProvider: RatesProvider, accounts: Accounts) {
+        this.ratesProvider = ratesProvider;
+        this.accounts = accounts;
         this.expressApp.use(express.json())
 
         // Get an account
         this.expressApp.get("/accounts/:id", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            // Find the account
-            const collection = await this.accountsCollection();
-            const findResult = await collection.findOne({_id: new ObjectId(id)});
-            console.log('Found documents =>', findResult);
+            const account = await this.accounts.getById(id);
 
-            if (findResult === null) {
+            if (account === undefined) {
                 next(new Error(`Account '${id}' not found!`));
             } else {
-                let balance = findResult.transactions.reduce((acc: number, val: any) => {
+
+                let balance = account.transactions.reduce((acc: number, val: any) => {
                     if (val.type === "deposit") return acc + val.amount;
                     if (val.type === "withdraw") return acc - val.amount;
                 }, 0);
@@ -31,15 +33,13 @@ export class Application {
 
                 // Get JPY account value
                 if (req.query.currency && req.query.currency === "JPY") {
-                    const host = 'api.frankfurter.app';
-                    const resp = await fetch(`https://${host}/latest?amount=1&from=EUR&to=JPY`);
-                    const data = await resp.json();
-                    balance = balance * data.rates.JPY;
+                    const rate = await this.ratesProvider.getRateFrom("EUR", "JPY");
+                    balance = balance * rate;
                     currency = "JPY"
                 }
 
                 res.send({
-                    owner: findResult.owner,
+                    owner: account.owner,
                     balance,
                     currency
                 });
@@ -49,16 +49,14 @@ export class Application {
         // Create a new account
         this.expressApp.post("/accounts", async (req: Request, res: Response) => {
             // TODO cannot have Two accounts for the same user
-            const collection = await this.accountsCollection();
-            // Create the new account
-            const insertResult = await collection.insertOne({
-                owner: req.body.owner,
-                transactions: []
-            });
-            console.log('Inserted documents =>', insertResult);
+            const owner = req.body.owner;
+
+            const accountId = `account-${randomUUID()}`;
+            const newAccount = new Account(accountId, owner);
+            await this.accounts.save(newAccount);
 
             res.json({
-                accountId: insertResult.insertedId.toString(),
+                accountId: newAccount.id,
                 message: "Account created."
             })
         });
@@ -67,28 +65,19 @@ export class Application {
         this.expressApp.post("/accounts/:id/deposit", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            const collection = await this.accountsCollection();
-            const findResult = await collection.findOne({_id: new ObjectId(id)});
+            const account = await this.accounts.getById(id);
 
-            if (findResult === null) {
+            if (account === undefined) {
                 next(new Error(`Account '${id}' not found!`));
             } else {
-                console.log('Found documents =>', findResult);
                 //TODO amount must be > 0
-                const newTransactions = [...findResult.transactions, {
+                const newTransactions = [...account.transactions, {
                     date: Date.now(),
                     type: "deposit",
                     amount: parseFloat(req.body.amount)
                 }];
-                //Update the account
-                const updateResult = await collection.updateOne(
-                    {_id: new ObjectId(id)}, {
-                        $set:
-                            {
-                                transactions: newTransactions
-                            }
-                    });
-                console.log('Updated documents =>', updateResult);
+
+                await this.accounts.updateTransactionsOf(id, newTransactions);
 
                 res.json({
                     message: `Account ${id} updated.`
@@ -100,29 +89,20 @@ export class Application {
         this.expressApp.post("/accounts/:id/withdraw", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            const collection = await this.accountsCollection();
-            const findResult = await collection.findOne({_id: new ObjectId(id)});
+            const account = await this.accounts.getById(id);
 
-            if (findResult === null) {
+            if (account === undefined) {
                 next(new Error(`Account '${id}' not found!`));
             } else {
-                console.log('Found documents =>', findResult);
                 //TODO amount must be > 0
                 //TODO balance must be > 0
-                const newTransactions = [...findResult.transactions, {
+                const newTransactions = [...account.transactions, {
                     date: Date.now(),
                     type: "withdraw",
                     amount: parseFloat(req.body.amount)
                 }];
-                //Update the account
-                const updateResult = await collection.updateOne(
-                    {_id: new ObjectId(id)}, {
-                        $set:
-                            {
-                                transactions: newTransactions
-                            }
-                    });
-                console.log('Updated documents =>', updateResult);
+
+                await this.accounts.updateTransactionsOf(id, newTransactions);
 
                 res.json({
                     message: `Account ${id} updated.`
@@ -137,18 +117,11 @@ export class Application {
         res.status(500).json({error: err.message});
     }
 
-    private async accountsCollection() {
-        await this.mongoClient.connect();
-        const db = this.mongoClient.db(DATABASE_NAME);
-        return db.collection('accounts');
-    }
-
     start(port: number): void {
         this.expressApp.listen(port, () => {
             console.log(`[server]: Server is running at http://localhost:${port}`);
         });
     }
 }
-
 
 

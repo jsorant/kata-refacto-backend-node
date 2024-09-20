@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.*;
@@ -15,11 +16,15 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApplicationControllerTests {
     private static final String OWNER = "Anthony Rey";
     private static final String NON_EXISTING_ACCOUNT_ID = "1635fb7d8b1a07dd83cafa31";
+
+    @MockBean
+    private RatesProvider ratesProvider;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -95,6 +100,8 @@ class ApplicationControllerTests {
 
     @Test
     void shouldGetBalanceOfTheAccountInJPY() throws JSONException {
+        when(ratesProvider.get("EUR", "JPY")).thenReturn(100.0);
+
         String accountId = createAccount();
         makeDepositResponse(accountId, "3.50");
         makeWithdrawalResponse(accountId, "1.10");
@@ -102,7 +109,7 @@ class ApplicationControllerTests {
         ResponseEntity<String> response = getAccountInJPYResponse(accountId);
 
         JSONObject body = toJsonBody(response);
-        assertThat(body.getDouble("balance")).isGreaterThan(2.4);
+        assertThat(body.getDouble("balance")).isEqualTo(240.0);
         assertThat(body.getString("currency")).isEqualTo("JPY");
     }
 

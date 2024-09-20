@@ -46,81 +46,62 @@ Mais cela est suffisant pour notre besoin actuel.
 
 ![e2e.jpg](assets/e2e.jpg)
 
+### Composants
+
+Pour tester l'application : `npm run test:component`
+
+Les tests de composants sont des tests pour lesquels l'application est isolée de ses interactions avec ses dépendances
+externes.
+
+Ces tests ne couvrent pas les appels à l'API ni à la base de données.
+Ils sont cependant bien plus rapides à exécuter et donnent un feedback instantané sur une bonne surface de
+l'application.
+
+![component.jpg](assets/component.jpg)
+
 </details>
 
-## Etape 2 : Se découpler de l'API et de la base de données
+### Etape 3 : Isoler les règles métier
 
-Les appels à l'API Frankfurter sont coûteux (traffic réseau, nombre de requêtes limitées).
-Les appels à la base de données sont lourds (temps de requête, avoir une base qui tourne en parallèle).
+Le but de cette étape est d'isoler les règles métier. À la fin de cette étape, il ne doit rester que du code spécifique
+à Express et à l'API REST dans `Application.ts`.
 
-L'étape suivante sera donc d'isoler notre application de ces services externes et d'écrire des tests de composants.
+On souhaite par ailleurs mettre en évidence les fonctionnalités de l'application.
 
-![step2-goal.jpg](assets/step2-goal.jpg)
+Objectif :
 
-Ces tests auront une couverture inférieure (ils ne testeront pas les appels à la DB ni à l'API) mais seront bien plus
-légers.
+![step3-goal.jpg](assets/step3-goal.jpg)
 
 Consignes :
 
-- `npm run test:e2e` n'est plus en watch mode pour limiter les appels à l'API Frankfurter
-- La commande `npm run test:component` permet d'exécuter uniquement les tests de composant présents
-  dans `tests-component` (il s'agit pour le moment d'une copie des tests end-to-end avec le test utilisant Frankfurter
-  désactivé)
-- Refactorez le code pour pouvoir tester via les tests de composant sans dépendences avec Mongo et Frankfurter
-- Prenez garde à ne pas mettre de logique métier dans le code isolé
-- La refacto ne doit pas casser les tests e2e, et ceux-ci doivent continuer à tester avec l'API et la base de données
-- Passez ensuite à l'étape suivante en allant sur la branche `step-3-start`
-
-Notes :
-
-- Vous pouvez lancer la commande `npm run test:all` pour exécuter l'ensemble des tests et vérifier la couverture globale
-- Il faudra utiliser des doublures de tests pour les tests de composant, déterminez les doublures les plus pertinentes
+- Utilisez les tests de composant pour sécuriser votre refactoring (`npm run test:component`)
+- Screaming architecture : faites apparaître les fonctionnalités offertes par l'application via les fichiers que vous
+  allez créer :
+    - Isolez la création de compte bancaire dans un ficher `domain/CreateAccount.ts`
+    - Isolez le dépôt d'argent dans un ficher `domain/MakeDeposit.ts`
+    - Isolez le retrait d'argent dans un ficher `domain/MakeWithdraw.ts`
+    - Isolez la consultation du solde (en euros ou en yens) dans un ficher `domain/ComputeBalance.ts`
+- Effectuez au moins une de ces isolations puis allez sur la branche `step-4-start` pour continuer
 
 <details>
   <summary>Résolution guidée</summary>
 
-Il est nécessaire d'isoler le code relatif à Mongo et à l'API Frankfurter, puis de créer une abstraction via une
-interface afin de pouvoir utiliser des doublures de test dans les tests de composant.
-
-Voici les transformations à effectuer pour les tests e2e :
-
-![step-2-e2e.jpg](assets/step-2-e2e.jpg)
-
-Et les transformations à effectuer pour les tests de composant :
-
-![step-2-component.jpg](assets/step-2-component.jpg)
-
-Résolution pas-à-pas pour l'isolation de l'API Frankfurter :
-
-- Isolez le code relatif à l'API Fankfurter dans une méthode de la classe Application (puis lancez les tests
-  e2e `npm run test:e2e`)
-- Créez une interface `RatesProvider` qui défini une méthode avec la même signature
-- Implémentez cette interface avec une classe `FrankfurterRatesProvider`, et copiez le code isolé
-- Ajoutez en membre privé à la classe Application un `ratesProvider` qui est pour le moment
-  un `FrankfurterRatesProvider`
-- Branchez le code de `Application` à `ratesProvider` et vérifiez que les tests sont toujours verts (puis lancez les
-  tests e2e `npm run test:e2e`)
-- Supprimez le code devenu inutile dans `Application` (puis lancez les tests e2e `npm run test:e2e`)
-- Modifiez le constructeur de `Application` pour injecter un `RatesProvider` et définir le membre `ratesProvider`
-- Réparez les tests de manière à compiler (puis lancez les tests e2e `npm run test:e2e`)
-- Réparez le fichier `Main.ts` de manière à compiler avec un `FrankfurterRatesProvider` (puis lancez le serveur
-  avec `npm run dev`)
-- Lancez les tests de composant `npm run test:component` et réparez le fichier de tests pour qu'il compile
-  avec `FrankfurterRatesProvider`
-- Créez un stub de `RatesProvider` et utilisez-le dans les tests de composant, et rendez le test avec la devise JPY
-  déterministe
-
-Pour créer un mock avec `vitest-mock-extended` :
-
-```js
-import {mock} from "vitest-mock-extended";
-
-const testDouble = mock < MyInterface > (); // Create mock object based on an interface
-
-testDouble.methodOfMyInterface.mockResolvedValue(10); // Stub an async method
-testDouble.methodOfMyInterface.mockReturnValue(10); // Stub a sync method
-```
-
-Puis reproduisez cette logique avec le code relatif à MongoDB. Utilisez cette fois-ci un fake in-memory.
+- Lancez les tests de composant `npm run test:component`
+- Isolez le cas d'usage "CreateAccount" :
+    - Isolez le code dédié à lire dans la requête REST les informations nécessaires (déjà fait)
+    - Isolez le code dédié à construire la réponse REST, basé sur le retour du cas d'usage (déjà fait)
+    - Utilisez une extraction de méthode pour isoler le cas d'usage dans une nouvelle méthode de la classe `Application`
+    - Créez une nouvelle classe `domain/CreateAccount.ts`
+    - Ajoutez une méthode `act()` dont le corps est une copie du cas d'usage isolé précédemment
+    - Ce code nécessite une instance de `Accounts` pour fonctionner, créez un constructeur pour injecter cet élément
+    - Injectez une instance de `CreateAccount` dans la classe `Application`
+    - Modifier le code des tests de composant pour réparer la compilation
+    - Branchez l'instance de `CreateAccount` dans la classe `Application`, puis supprimez la méthode obsolète
+    - Réparez les tests e2e
+    - Réparez `Main.ts`
+    - Vérifiez l'ensemble de vos tests `npm run test:all`
+    - Vérifiez que le serveur démarre toujours `npm run dev`
+- Implémentez de la même façon les autres cas d'usage
 
 </details>
+
