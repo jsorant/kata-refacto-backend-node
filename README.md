@@ -1,20 +1,57 @@
 # Reprendre la main sur mon backend (Testing & refactoring)
 
-## Objectif
+## Objectif de l’atelier
 
-L'objectif de cet atelier est d'améliorer une application backend et de manipuler différents types de tests :
+Cet atelier a pour but de découvrir différentes façons de tester une application, tout en travaillant sur des notions
+d’architecture logicielle.
 
-- end-to-end
-- de composants
-- d'intégration
-- unitaires
+Nous allons prendre comme exemple un petit backend **Node.js / Express** qui gère des comptes bancaires.
+Avec cette application, vous pourrez :
 
-Pour cela, nous serons amené à utiliser différents outils.
+* créer un compte,
+* faire des dépôts et des retraits,
+* consulter le solde en euros ou en yens.
 
-Nous avancerons étape par étape dans l'ajout de ces types de tests.
-Ceci nous permettra de refactorer progressivement la base de code.
+## Ce que nous ferons ensemble
 
-Nous ajouterons finalement quelques features en double loop TDD.
+Nous allons mettre en place plusieurs types de tests :
+
+* **end-to-end**,
+* **de composant**,
+* **d’intégration**,
+* et **unitaires**.
+
+Pour cela, nous utiliserons des outils comme **Vitest**, **Supertest** et **Testcontainers**.
+
+En parallèle, nous améliorerons progressivement l’architecture de l’application afin qu’elle soit plus facile à
+comprendre, à faire évoluer et à maintenir.
+Nous parlerons notamment d’**architecture hexagonale** et de **Domain-Driven Design (DDD)**.
+
+Enfin, nous ajouterons de nouvelles fonctionnalités en appliquant la pratique du **double loop TDD**.
+
+## Pré-requis
+
+Avant l’atelier, assurez-vous d’avoir :
+
+* Un IDE configuré pour coder en **TypeScript**
+* **Node.js** & **npm**
+* **Docker**
+* L’image Docker de **MongoDB** `mongo:7.0.6` (vous pouvez la télécharger à l’avance avec la commande :
+
+  ```bash
+  docker image pull mongo:7.0.6
+  ```
+
+## Un client HTTP REST
+
+Pour tester facilement vos requêtes HTTP, vous pouvez utiliser l’un de ces outils intégrés à votre IDE :
+
+* **VS Code
+  ** : [https://marketplace.visualstudio.com/items?itemName=humao.rest-client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+* **WebStorm
+  ** : [https://www.jetbrains.com/help/webstorm/http-client-in-product-code-editor.html](https://www.jetbrains.com/help/webstorm/http-client-in-product-code-editor.html)
+* **IntelliJ IDEA
+  ** : [https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html](https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html)
 
 ## Slides
 
