@@ -1,17 +1,5 @@
 # Reprendre la main sur mon backend Node (Testing & refactoring)
 
-## Résolution guidée
-
-Cette page détaille les consignes pour faire le kata de manière accompagnée. Il sera alors découpé en plusieurs étapes.
-
-Pour une résolution libre, allez sur [cette page](all_steps.md).
-
-## Slides
-
-Ce kata a été proposé en atelier à [Tech N Wine](https://technwine.fr/) 2024.
-
-[Les slides sont disponibles ici.](assets/slides_fr.pdf)
-
 ## Objectif
 
 L'objectif de cet atelier est d'améliorer un backend NodeJS et de manipuler différents types de tests :
@@ -48,8 +36,7 @@ L'application est un backend NodeJS / Express qui permet de gérer des comptes b
 Il est possible de créer un compte, d'effectuer des dépots et des retraits d'argent, et de consulter le solde en euros
 et en yens.
 
-L'application nécessite une base de données Mongo pour fonctionner. En local, installez Docker et lancer les commandes
-suivantes :
+Pour lancer une base de données Mongo avec Docker :
 
 ```
 mkdir ~/data  
@@ -69,35 +56,3 @@ Pour tester :
 - Utilisez le fichier `Request.http` et le plugin HTTP Client pour effectuer des requêtes
 
 ![manual-tests.jpg](assets/manual-tests.jpg)
-
-## Etape 1 : Couvrir le code actuel
-
-Le but de cette étape et de découvrir comment réaliser facilement des tests avec Supertest en couvrant l'application
-existante.
-
-Pour ne pas ajouter de complexité et obtenir rapidement une bonne couverture, nous mettrons en place des tests
-end-to-end un peu particuliers. En effet, contrairement à des tests end-to-end "classiques", on ne build pas
-l'application et on ne la lance pas pour la tester. On utilise Supertest pour tester en boîte blanche et simuler des
-appels aux routes, sans démarrer l'application.
-
-Voici les consignes :
-
-- Démarrez une instance de Mongo dans un conteneur Docker
-- Ne lancez pas trop souvent les tests qui utilisent l'API Frankfurter (utilisez `it.skip` pour désactiver
-  un test)
-- `Application.ts` n'est pas encore couvert par des tests, ne modifiez son code que si cela est vraiment nécessaire
-- Les tests sont à rédiger dans le fichier `tests-e2e/Accounts.spec.ts`
-- Travaillez avec un feedback continu sur les tests e2e via la commande `npm run test:e2e`
-- Commencez par compléter le test existant, et vérifiez la couverture de code
-- Implémentez ensuite le test suggéré, vérifiez la couverture de code
-- Implémentez une stratégie pour nettoyer régulièrement la base de données.
-- Une fois ces étapes réalisées, ajoutez des tests pour atteindre une couverture maximale ou passez à l'étape suivante
-  en allant sur la branche `step-2-start`
-
-Notes :
-
-- Ne cherchez pas à tester la méthode `start()` de la classe `Application`
-- Utilisez le mode UI de Vitest pour vérifier la couverture de code avec plus de confort
-- Il est possible de lancer le serveur via `npm run dev` et d'utiliser le fichier `Requests.http` pour tester les
-  requêtes et obtenir des exemples de réponses.
-- Mongo n'accepte que les id avec un format spécifique (hex string de longueur 24, ex : `6645b7ae2d4e3ffe018f0ba2`).
