@@ -41,8 +41,8 @@ export class Application {
 
                 // Get JPY account value
                 if (req.query.currency && req.query.currency === "JPY") {
-                    const host = 'api.frankfurter.app';
-                    const resp = await fetch(`https://${host}/latest?amount=1&from=EUR&to=JPY`);
+                    const host = 'api.frankfurter.dev';
+                    const resp = await fetch(`https://${host}/v1/latest?amount=1&from=EUR&to=JPY`);
                     const data = await resp.json();
                     balance = balance * data.rates.JPY;
                     currency = "JPY"
