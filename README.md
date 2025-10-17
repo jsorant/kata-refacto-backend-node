@@ -57,4 +57,5 @@ Pour tester facilement vos requêtes HTTP, vous pouvez utiliser l’un de ces ou
 
 Ce kata a été proposé en atelier à [Tech N Wine](https://technwine.fr/) 2024 dans sa version Typescript.
 
-[Les slides sont disponibles ici.](typescript/assets/slides_fr.pdf)
+- [Slides Workshops Craft 2025](typescript/assets/slides_fr_workshops_craft_2025.pdf)
+- [Slides Tech N Wine 2024](typescript/assets/slides_fr_technwine_2024.pdf)
