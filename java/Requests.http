@@ -1,0 +1,50 @@
+@api = http://localhost:3000
+@accountId = 6669baafc392342a8902f974
+
+### List accounts
+
+GET {{api}}/
+Accept: application/json
+
+### Create a new account
+
+POST {{api}}/accounts
+Accept: application/json
+Content-Type: application/json
+
+{
+  "owner": "Jérémy Sorant"
+}
+
+### Get an account's balance
+
+GET {{api}}/accounts/{{accountId}}
+Accept: application/json
+Content-Type: application/json
+
+### Get an account's balance in JPY currency
+
+GET {{api}}/accounts/{{accountId}}?currency=JPY
+Accept: application/json
+Content-Type: application/json
+
+### Deposit money into an account
+
+POST {{api}}/accounts/{{accountId}}/deposit
+Accept: application/json
+Content-Type: application/json
+
+{
+  "amount": "1.50"
+}
+
+### Withdraw money from an account
+
+POST {{api}}/accounts/{{accountId}}/withdraw
+Accept: application/json
+Content-Type: application/json
+
+{
+  "amount": "1.15"
+}
+
